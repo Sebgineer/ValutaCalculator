@@ -70,7 +70,7 @@ public class ApiCurrency implements CurrencyDAO {
                         String key = keys.next();
                         currencyBases.add(key);
                     }
-                    notifyAllObserverBase();
+                    notifyAllObserverBaseChange();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -84,16 +84,21 @@ public class ApiCurrency implements CurrencyDAO {
         MainActivity.queue.add(jsonObjectRequest);
     }
 
-    public void notifyAllObserverBase() {
+
+    private void notifyAllObserverBaseChange() {
         for (CurrencyListener l : listeners) {
             l.onBaseChanges(this.currencyBases);
         }
     }
 
+    /** Add observer to observable.
+     * @param listener adds as observer*/
     public void addListener(CurrencyListener listener) {
         listeners.add(listener);
     }
 
+    /** Remove observer from observable
+     * @param listener removes as a observer*/
     public void removeListener(CurrencyListener listener) {
         listeners.remove(listener);
     }
