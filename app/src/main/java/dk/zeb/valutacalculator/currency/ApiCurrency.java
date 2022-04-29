@@ -1,6 +1,7 @@
 package dk.zeb.valutacalculator.currency;
 
 import android.content.Context;
+import android.widget.ListView;
 
 import com.android.volley.*;
 import com.android.volley.toolbox.*;
@@ -20,46 +21,36 @@ import javax.net.ssl.HttpsURLConnection;
 import dk.zeb.valutacalculator.MainActivity;
 
 public class ApiCurrency implements CurrencyDAO {
-    private String key = "317d4391da7c6878cf4ee44a";
-    private String path = String.format("https://v6.exchangerate-api.com/v6/%s/", key);
-    private List<CurrencyListener> listeners = new ArrayList<CurrencyListener>();
-    private List<String> currencyBases = new ArrayList<String>();
+    private List<CurrencyListener> listeners;
+    private List<String> currencyBases;
+    private List<Rate> rates;
+    private ApiRequester requester;
 
-    public ApiCurrency() {
+
+    /***/
+    public ApiCurrency(RequestQueue queue) {
+        this.listeners = new ArrayList<CurrencyListener>();
+        this.currencyBases = new ArrayList<String>();
+        this.rates = new ArrayList<Rate>();
+        this.requester = new ApiRequester(queue);
     }
 
-
+    /**
+     * */
     @Override
     public List<Rate> getRates(String base) {
-        System.out.println("GetRate");
-        try {
+        requester.requestJSONObject("latest/" + base, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
 
-            String url = path + "latest/DKK";
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    System.out.println("Next: ");
-                    System.out.println(response);
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    System.out.println("Fail");
-                }
             }
-            );
-            MainActivity.queue.add(stringRequest);
-            System.out.println("kage");
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-
+        });
         return null;
     }
 
+    /** Update the base currency and notify all the observer*/
      public void updateBases() {
-        String url = path + "latest/DKK";
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, new Response.Listener<JSONObject>() {
+        requester.requestJSONObject("latest/DKK", new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
@@ -70,22 +61,16 @@ public class ApiCurrency implements CurrencyDAO {
                         String key = keys.next();
                         currencyBases.add(key);
                     }
-                    notifyAllObserverBaseChange();
+                    notifyObserverOnBaseChange();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
         });
-        MainActivity.queue.add(jsonObjectRequest);
     }
 
-
-    private void notifyAllObserverBaseChange() {
+    /** To notify the observers when currency base has changed*/
+    private void notifyObserverOnBaseChange() {
         for (CurrencyListener l : listeners) {
             l.onBaseChanges(this.currencyBases);
         }

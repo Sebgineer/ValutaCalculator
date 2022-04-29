@@ -16,9 +16,9 @@ import dk.zeb.valutacalculator.currency.CurrencyListener;
 
 public class MainActivity extends AppCompatActivity {
 
-    List<String> list;
-    public static RequestQueue queue;
-    ApiCurrency apiCurrency = new ApiCurrency();
+    private ApiCurrency apiCurrency;
+
+    /***/
     CurrencyListener currencyListener = new CurrencyListener() {
         @Override
         public void onBaseChanges(List<String> bases) {
@@ -29,12 +29,12 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
+    /***/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        queue = Volley.newRequestQueue(this);
+        apiCurrency = new ApiCurrency(Volley.newRequestQueue(this));
         apiCurrency.addListener(this.currencyListener);
         apiCurrency.updateBases();
     }
