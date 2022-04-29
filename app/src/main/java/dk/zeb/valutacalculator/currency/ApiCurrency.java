@@ -1,24 +1,12 @@
 package dk.zeb.valutacalculator.currency;
 
-import android.content.Context;
-import android.widget.ListView;
-
 import com.android.volley.*;
-import com.android.volley.toolbox.*;
-import com.google.gson.JsonArray;
 
-//import java.net.HttpURLConnection;
 import org.json.*;
 
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Currency;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.net.ssl.HttpsURLConnection;
-
-import dk.zeb.valutacalculator.MainActivity;
 
 public class ApiCurrency implements CurrencyDAO {
     private List<CurrencyListener> listeners;
@@ -38,14 +26,29 @@ public class ApiCurrency implements CurrencyDAO {
     /**
      * */
     @Override
-    public List<Rate> getRates(String base) {
+    public List<Rate> getRates() {
+        return this.rates;
+    }
+
+    public void updateRates(String base) {
         requester.requestJSONObject("latest/" + base, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-
+                rates.clear();
+                try {
+                    JSONObject object = response.getJSONObject("conversion_rates");
+                    Iterator<String> keys = object.keys();
+                    while (keys.hasNext()) {
+                        String key = keys.next();
+                        Rate rate = new Rate(key, Double.parseDouble(object.get(key).toString()));
+                        rates.add(rate);
+                    }
+                    notifyObserverOnRatesChange();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
-        return null;
     }
 
     /** Update the base currency and notify all the observer*/
@@ -69,9 +72,15 @@ public class ApiCurrency implements CurrencyDAO {
         });
     }
 
+    private void notifyObserverOnRatesChange() {
+         for (CurrencyListener l : this.listeners) {
+            l.onRatesChange(this.rates);
+         }
+    }
+
     /** To notify the observers when currency base has changed*/
     private void notifyObserverOnBaseChange() {
-        for (CurrencyListener l : listeners) {
+        for (CurrencyListener l : this.listeners) {
             l.onBaseChanges(this.currencyBases);
         }
     }

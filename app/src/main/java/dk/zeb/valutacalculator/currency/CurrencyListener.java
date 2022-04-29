@@ -9,4 +9,7 @@ public interface CurrencyListener {
      * @param bases is the updated list of bases  */
     public void onBaseChanges(List<String> bases);
 
+    /***/
+    public void onRatesChange(List<Rate> rates);
+
 }
