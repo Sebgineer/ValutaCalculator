@@ -10,4 +10,11 @@ public class Rate {
         this.spotRate = spotRate;
     }
 
+    public String getName() {
+        return this.name;
+    }
+
+    public double getSpotRate() {
+        return this.spotRate;
+    }
 }
